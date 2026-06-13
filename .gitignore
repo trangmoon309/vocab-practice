@@ -1,0 +1,24 @@
+# .NET build output
+bin/
+obj/
+
+# User secrets & local config
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# Frontend
+node_modules/
+dist/
+.env.local
+.env.*.local
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
