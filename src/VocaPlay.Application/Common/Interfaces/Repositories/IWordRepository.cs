@@ -1,7 +1,7 @@
-// VocaPlay.Domain/Interfaces/Repositories/IWordRepository.cs
+// VocaPlay.Application/Common/Interfaces/Repositories/IWordRepository.cs
 using VocaPlay.Domain.Entities;
 
-namespace VocaPlay.Domain.Interfaces.Repositories;
+namespace VocaPlay.Application.Common.Interfaces.Repositories;
 
 /// <summary>Persistence contract for Word aggregate.</summary>
 public interface IWordRepository

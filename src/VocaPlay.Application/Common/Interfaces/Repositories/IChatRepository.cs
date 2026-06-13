@@ -1,7 +1,7 @@
-// VocaPlay.Domain/Interfaces/Repositories/IChatRepository.cs
+// VocaPlay.Application/Common/Interfaces/Repositories/IChatRepository.cs
 using VocaPlay.Domain.Entities;
 
-namespace VocaPlay.Domain.Interfaces.Repositories;
+namespace VocaPlay.Application.Common.Interfaces.Repositories;
 
 /// <summary>Persistence contract for ChatMessage aggregate.</summary>
 public interface IChatRepository

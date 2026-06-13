@@ -1,7 +1,7 @@
-// VocaPlay.Domain/Interfaces/Services/IAiChatService.cs
+// VocaPlay.Application/Common/Interfaces/Services/IAiChatService.cs
 using VocaPlay.Domain.Entities;
 
-namespace VocaPlay.Domain.Interfaces.Services;
+namespace VocaPlay.Application.Common.Interfaces.Services;
 
 /// <summary>Abstraction over the OpenAI chat completion service.</summary>
 public interface IAiChatService

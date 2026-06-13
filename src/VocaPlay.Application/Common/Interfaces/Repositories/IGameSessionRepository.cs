@@ -1,7 +1,7 @@
-// VocaPlay.Domain/Interfaces/Repositories/IGameSessionRepository.cs
+// VocaPlay.Application/Common/Interfaces/Repositories/IGameSessionRepository.cs
 using VocaPlay.Domain.Entities;
 
-namespace VocaPlay.Domain.Interfaces.Repositories;
+namespace VocaPlay.Application.Common.Interfaces.Repositories;
 
 /// <summary>Persistence contract for GameSession aggregate.</summary>
 public interface IGameSessionRepository

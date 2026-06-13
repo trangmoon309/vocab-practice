@@ -1,7 +1,7 @@
-// VocaPlay.Domain/Interfaces/Repositories/IUserRepository.cs
+// VocaPlay.Application/Common/Interfaces/Repositories/IUserRepository.cs
 using VocaPlay.Domain.Entities;
 
-namespace VocaPlay.Domain.Interfaces.Repositories;
+namespace VocaPlay.Application.Common.Interfaces.Repositories;
 
 /// <summary>Persistence contract for User aggregate.</summary>
 public interface IUserRepository
