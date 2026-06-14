@@ -36,6 +36,7 @@ public static class DependencyInjection
         // Game
         services.AddScoped<GetGamePairsQueryHandler>();
         services.AddScoped<SaveGameSessionCommandHandler>();
+        services.AddScoped<GetGameSessionsQueryHandler>();
 
         // Chat
         services.AddScoped<SendChatMessageCommandHandler>();
