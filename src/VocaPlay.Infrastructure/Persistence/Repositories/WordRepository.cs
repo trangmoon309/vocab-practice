@@ -15,15 +15,15 @@ public class WordRepository : IWordRepository
     public async Task<Word?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.Words.FindAsync(new object[] { id }, ct);
 
-    public async Task<IReadOnlyList<Word>> GetByWordSetIdAsync(Guid wordSetId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Word>> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
         => await _db.Words
-            .Where(w => w.WordSetId == wordSetId)
+            .Where(w => w.UserId == userId)
             .OrderBy(w => w.CreatedAt)
             .ToListAsync(ct);
 
-    public async Task<IReadOnlyList<string>> GetEnglishWordsInSetAsync(Guid wordSetId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<string>> GetEnglishWordsForUserAsync(Guid userId, CancellationToken ct = default)
         => await _db.Words
-            .Where(w => w.WordSetId == wordSetId)
+            .Where(w => w.UserId == userId)
             .Select(w => w.English)
             .ToListAsync(ct);
 

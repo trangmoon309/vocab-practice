@@ -3,7 +3,6 @@ namespace VocaPlay.Application.Words.Commands;
 
 public record UpdateWordCommand(
     Guid WordId,
-    Guid WordSetId,
     Guid UserId,
     string English,
     string Vietnamese,

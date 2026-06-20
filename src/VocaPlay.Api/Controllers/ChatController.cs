@@ -33,7 +33,7 @@ public class ChatController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ChatResponseDto>> Send(ChatRequestDto request, CancellationToken ct)
     {
-        var result = await _send.Handle(new SendChatMessageCommand(_currentUser.UserId, request.Message, request.WordSetId), ct);
+        var result = await _send.Handle(new SendChatMessageCommand(_currentUser.UserId, request.Message), ct);
         return Ok(result);
     }
 

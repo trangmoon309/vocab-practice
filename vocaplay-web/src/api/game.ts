@@ -1,8 +1,8 @@
 import { api } from './axios';
 import type { GamePairs, GameSession, SaveGameSessionInput } from '../types';
 
-export function getGamePairs(setId: string) {
-  return api.get<GamePairs>(`/wordsets/${setId}/game`);
+export function getGamePairs() {
+  return api.get<GamePairs>('/game/pairs');
 }
 
 export function saveGameSession(input: SaveGameSessionInput) {

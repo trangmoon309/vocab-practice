@@ -14,6 +14,6 @@ public class GetGameSessionsQueryHandler
     public async Task<IReadOnlyList<GameSessionDto>> Handle(GetGameSessionsQuery query, CancellationToken ct = default)
     {
         var sessions = await _sessions.GetByUserIdAsync(query.UserId, ct);
-        return sessions.Select(s => new GameSessionDto(s.Id, s.WordSetId, s.Score, s.TotalPairs, s.CompletedAt)).ToList();
+        return sessions.Select(s => new GameSessionDto(s.Id, s.Score, s.TotalPairs, s.CompletedAt)).ToList();
     }
 }

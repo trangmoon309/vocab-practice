@@ -9,30 +9,19 @@ namespace VocaPlay.Application.Words.Commands;
 
 public class AddWordCommandHandler
 {
-    private readonly IWordSetRepository _wordSets;
     private readonly IWordRepository _words;
 
-    public AddWordCommandHandler(IWordSetRepository wordSets, IWordRepository words)
-    {
-        _wordSets = wordSets;
-        _words = words;
-    }
+    public AddWordCommandHandler(IWordRepository words) => _words = words;
 
-    /// <summary>Adds a single word to a word set. Enforces ownership and validates enum values.</summary>
+    /// <summary>Adds a single word for the current user. Validates enum values.</summary>
     public async Task<WordDto> Handle(AddWordCommand command, CancellationToken ct = default)
     {
-        var set = await _wordSets.GetByIdAsync(command.WordSetId, ct)
-            ?? throw new NotFoundException(nameof(WordSet), command.WordSetId);
-
-        if (set.UserId != command.UserId)
-            throw new ForbiddenException();
-
         ValidateEnums(command.Level, command.Type);
 
         var word = new Word
         {
             Id = Guid.NewGuid(),
-            WordSetId = command.WordSetId,
+            UserId = command.UserId,
             English = command.English.Trim(),
             Vietnamese = command.Vietnamese.Trim(),
             Pronunciation = command.Pronunciation?.Trim(),

@@ -21,5 +21,7 @@ public class WordConfiguration : IEntityTypeConfiguration<Word>
 
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
         builder.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+
+        builder.HasIndex(e => e.UserId);
     }
 }

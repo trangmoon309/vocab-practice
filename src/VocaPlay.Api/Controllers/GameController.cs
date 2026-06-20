@@ -10,7 +10,7 @@ namespace VocaPlay.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api")]
+[Route("api/game")]
 public class GameController : ControllerBase
 {
     private readonly ICurrentUserService _currentUser;
@@ -30,21 +30,21 @@ public class GameController : ControllerBase
         _getSessions = getSessions;
     }
 
-    [HttpGet("wordsets/{setId:guid}/game")]
-    public async Task<ActionResult<GamePairsDto>> GetPairs(Guid setId, CancellationToken ct)
+    [HttpGet("pairs")]
+    public async Task<ActionResult<GamePairsDto>> GetPairs(CancellationToken ct)
     {
-        var result = await _getPairs.Handle(new GetGamePairsQuery(setId, _currentUser.UserId), ct);
+        var result = await _getPairs.Handle(new GetGamePairsQuery(_currentUser.UserId), ct);
         return Ok(result);
     }
 
-    [HttpPost("game/sessions")]
+    [HttpPost("sessions")]
     public async Task<ActionResult<GameSessionDto>> SaveSession(SaveGameSessionRequestDto request, CancellationToken ct)
     {
-        var result = await _saveSession.Handle(new SaveGameSessionCommand(_currentUser.UserId, request.WordSetId, request.Score, request.TotalPairs), ct);
+        var result = await _saveSession.Handle(new SaveGameSessionCommand(_currentUser.UserId, request.Score, request.TotalPairs), ct);
         return Ok(result);
     }
 
-    [HttpGet("game/sessions")]
+    [HttpGet("sessions")]
     public async Task<ActionResult<IReadOnlyList<GameSessionDto>>> GetSessions(CancellationToken ct)
     {
         var result = await _getSessions.Handle(new GetGameSessionsQuery(_currentUser.UserId), ct);
@@ -52,4 +52,4 @@ public class GameController : ControllerBase
     }
 }
 
-public record SaveGameSessionRequestDto(Guid WordSetId, int Score, int TotalPairs);
+public record SaveGameSessionRequestDto(int Score, int TotalPairs);

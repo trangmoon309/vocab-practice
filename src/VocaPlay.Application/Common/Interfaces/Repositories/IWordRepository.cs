@@ -7,8 +7,8 @@ namespace VocaPlay.Application.Common.Interfaces.Repositories;
 public interface IWordRepository
 {
     Task<Word?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IReadOnlyList<Word>> GetByWordSetIdAsync(Guid wordSetId, CancellationToken ct = default);
-    Task<IReadOnlyList<string>> GetEnglishWordsInSetAsync(Guid wordSetId, CancellationToken ct = default);
+    Task<IReadOnlyList<Word>> GetByUserIdAsync(Guid userId, CancellationToken ct = default);
+    Task<IReadOnlyList<string>> GetEnglishWordsForUserAsync(Guid userId, CancellationToken ct = default);
     Task AddAsync(Word word, CancellationToken ct = default);
     Task AddRangeAsync(IEnumerable<Word> words, CancellationToken ct = default);
     Task UpdateAsync(Word word, CancellationToken ct = default);

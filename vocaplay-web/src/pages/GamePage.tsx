@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import * as gameApi from '../api/game'
 import type { GamePairItem } from '../types'
@@ -8,14 +8,12 @@ type Card = { id: string; text: string; lang: 'en' | 'vi'; pairId: string }
 type CardState = 'idle' | 'selected' | 'matched' | 'wrong'
 
 export function GamePage() {
-  const { id } = useParams<{ id: string }>()
   const [cards, setCards] = useState<Card[]>([])
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({})
   const [selected, setSelected] = useState<Card | null>(null)
   const [score, setScore] = useState(0)
   const [total, setTotal] = useState(0)
   const [done, setDone] = useState(false)
-  const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(true)
 
   const buildCards = useCallback((pairs: GamePairItem[]) => {
@@ -36,12 +34,10 @@ export function GamePage() {
   }, [])
 
   useEffect(() => {
-    if (!id) return
-    gameApi.getGamePairs(id).then((r) => {
-      setTitle(r.data.wordSetTitle)
+    gameApi.getGamePairs().then((r) => {
       buildCards(r.data.pairs)
     }).finally(() => setLoading(false))
-  }, [id, buildCards])
+  }, [buildCards])
 
   const handleSelect = (card: Card) => {
     if (cardStates[card.id] === 'matched' || cardStates[card.id] === 'selected') return
@@ -63,7 +59,7 @@ export function GamePage() {
       setScore(newScore)
       if (newScore === total) {
         setDone(true)
-        gameApi.saveGameSession({ wordSetId: id!, score: newScore, totalPairs: total }).catch(() => {})
+        gameApi.saveGameSession({ score: newScore, totalPairs: total }).catch(() => {})
       }
     } else {
       // wrong
@@ -89,7 +85,7 @@ export function GamePage() {
       <Navbar />
       <main className="mx-auto max-w-2xl px-4 py-8">
         <div className="mb-4 flex items-center gap-2">
-          <Link to={`/wordsets/${id}`} className="text-sm text-indigo-600 hover:underline">← {title}</Link>
+          <Link to="/" className="text-sm text-indigo-600 hover:underline">← My Words</Link>
         </div>
 
         {done ? (
@@ -99,13 +95,13 @@ export function GamePage() {
             <p className="mt-1 text-gray-500">{score} / {total} pairs</p>
             <div className="mt-6 flex justify-center gap-3">
               <button
-                onClick={() => { setDone(false); setScore(0); setLoading(true); gameApi.getGamePairs(id!).then((r) => { buildCards(r.data.pairs); setLoading(false) }) }}
+                onClick={() => { setDone(false); setScore(0); setLoading(true); gameApi.getGamePairs().then((r) => { buildCards(r.data.pairs); setLoading(false) }) }}
                 className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
               >
                 Play again
               </button>
-              <Link to={`/wordsets/${id}`} className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                Back to set
+              <Link to="/" className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                Back to words
               </Link>
             </div>
           </div>

@@ -4,7 +4,7 @@ namespace VocaPlay.Domain.Entities;
 public class Word
 {
     public Guid Id { get; set; }
-    public Guid WordSetId { get; set; }
+    public Guid UserId { get; set; }
     public string English { get; set; } = string.Empty;
     public string Vietnamese { get; set; } = string.Empty;
     public string? Pronunciation { get; set; }
@@ -14,5 +14,5 @@ public class Word
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public WordSet WordSet { get; set; } = null!;
+    public User User { get; set; } = null!;
 }

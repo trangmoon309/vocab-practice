@@ -1,4 +1,4 @@
 // VocaPlay.Application/Game/Queries/GetGamePairsQuery.cs
 namespace VocaPlay.Application.Game.Queries;
 
-public record GetGamePairsQuery(Guid WordSetId, Guid UserId);
+public record GetGamePairsQuery(Guid UserId);

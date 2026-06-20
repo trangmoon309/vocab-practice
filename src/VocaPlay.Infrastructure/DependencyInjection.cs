@@ -30,7 +30,6 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IWordSetRepository, WordSetRepository>();
         services.AddScoped<IWordRepository, WordRepository>();
         services.AddScoped<IGameSessionRepository, GameSessionRepository>();
         services.AddScoped<IChatRepository, ChatRepository>();

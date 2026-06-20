@@ -9,4 +9,4 @@ public record WordInput(
     string? Type,
     string? ExampleSentence);
 
-public record BulkAddWordsCommand(Guid WordSetId, Guid UserId, IReadOnlyList<WordInput> Words);
+public record BulkAddWordsCommand(Guid UserId, IReadOnlyList<WordInput> Words);

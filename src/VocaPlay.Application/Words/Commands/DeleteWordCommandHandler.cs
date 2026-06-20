@@ -7,28 +7,17 @@ namespace VocaPlay.Application.Words.Commands;
 
 public class DeleteWordCommandHandler
 {
-    private readonly IWordSetRepository _wordSets;
     private readonly IWordRepository _words;
 
-    public DeleteWordCommandHandler(IWordSetRepository wordSets, IWordRepository words)
-    {
-        _wordSets = wordSets;
-        _words = words;
-    }
+    public DeleteWordCommandHandler(IWordRepository words) => _words = words;
 
-    /// <summary>Deletes a word after verifying ownership chain: user → word set → word.</summary>
+    /// <summary>Deletes a word. Enforces ownership.</summary>
     public async Task Handle(DeleteWordCommand command, CancellationToken ct = default)
     {
-        var set = await _wordSets.GetByIdAsync(command.WordSetId, ct)
-            ?? throw new NotFoundException(nameof(WordSet), command.WordSetId);
-
-        if (set.UserId != command.UserId)
-            throw new ForbiddenException();
-
         var word = await _words.GetByIdAsync(command.WordId, ct)
             ?? throw new NotFoundException(nameof(Word), command.WordId);
 
-        if (word.WordSetId != command.WordSetId)
+        if (word.UserId != command.UserId)
             throw new ForbiddenException();
 
         await _words.DeleteAsync(word, ct);

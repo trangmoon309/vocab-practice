@@ -9,28 +9,17 @@ namespace VocaPlay.Application.Words.Commands;
 
 public class UpdateWordCommandHandler
 {
-    private readonly IWordSetRepository _wordSets;
     private readonly IWordRepository _words;
 
-    public UpdateWordCommandHandler(IWordSetRepository wordSets, IWordRepository words)
-    {
-        _wordSets = wordSets;
-        _words = words;
-    }
+    public UpdateWordCommandHandler(IWordRepository words) => _words = words;
 
-    /// <summary>Updates a word. Verifies the word belongs to the user's word set.</summary>
+    /// <summary>Updates a word. Enforces ownership.</summary>
     public async Task<WordDto> Handle(UpdateWordCommand command, CancellationToken ct = default)
     {
-        var set = await _wordSets.GetByIdAsync(command.WordSetId, ct)
-            ?? throw new NotFoundException(nameof(WordSet), command.WordSetId);
-
-        if (set.UserId != command.UserId)
-            throw new ForbiddenException();
-
         var word = await _words.GetByIdAsync(command.WordId, ct)
             ?? throw new NotFoundException(nameof(Word), command.WordId);
 
-        if (word.WordSetId != command.WordSetId)
+        if (word.UserId != command.UserId)
             throw new ForbiddenException();
 
         ValidateEnums(command.Level, command.Type);

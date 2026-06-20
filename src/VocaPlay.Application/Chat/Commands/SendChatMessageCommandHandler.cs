@@ -57,7 +57,7 @@ public class SendChatMessageCommandHandler
         var startIdx = rawReply.IndexOf(start, StringComparison.Ordinal);
         var endIdx = rawReply.IndexOf(end, StringComparison.Ordinal);
 
-        if (startIdx < 0 || endIdx < 0 || command.WordSetId is null)
+        if (startIdx < 0 || endIdx < 0)
             return (rawReply, null);
 
         var json = rawReply[(startIdx + start.Length)..endIdx].Trim();
@@ -73,9 +73,9 @@ public class SendChatMessageCommandHandler
                 w.English, w.Vietnamese, w.Pronunciation, w.Level, w.Type, w.ExampleSentence)).ToList();
 
             var result = await _bulkAdd.Handle(
-                new BulkAddWordsCommand(command.WordSetId.Value, command.UserId, inputs), ct);
+                new BulkAddWordsCommand(command.UserId, inputs), ct);
 
-            return (cleanReply, new ChatActionDto("BULK_ADD_WORDS", command.WordSetId, result.Added));
+            return (cleanReply, new ChatActionDto("BULK_ADD_WORDS", result.Added));
         }
         catch
         {

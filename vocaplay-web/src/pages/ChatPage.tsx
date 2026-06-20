@@ -2,22 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import * as chatApi from '../api/chat'
-import * as wordSetsApi from '../api/wordsets'
-import type { ChatMessage, WordSet } from '../types'
+import type { ChatMessage } from '../types'
 
 export function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
-  const [wordSets, setWordSets] = useState<WordSet[]>([])
-  const [selectedSetId, setSelectedSetId] = useState<string>('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    Promise.all([chatApi.getChatHistory(), wordSetsApi.getWordSets()]).then(([chat, sets]) => {
-      setMessages(chat.data)
-      setWordSets(sets.data)
-    })
+    chatApi.getChatHistory().then((r) => setMessages(r.data))
   }, [])
 
   useEffect(() => {
@@ -40,7 +34,7 @@ export function ChatPage() {
     setMessages((m) => [...m, optimistic])
 
     try {
-      const r = await chatApi.sendChatMessage({ message: text, wordSetId: selectedSetId || null })
+      const r = await chatApi.sendChatMessage({ message: text })
       const reply: ChatMessage = {
         id: `reply-${Date.now()}`,
         role: 'assistant',
@@ -64,19 +58,7 @@ export function ChatPage() {
       <Navbar />
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6">
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-sm text-indigo-600 hover:underline">← Word Sets</Link>
-            <select
-              value={selectedSetId}
-              onChange={(e) => setSelectedSetId(e.target.value)}
-              className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-indigo-500 focus:outline-none"
-            >
-              <option value="">No word set</option>
-              {wordSets.map((ws) => (
-                <option key={ws.id} value={ws.id}>{ws.title}</option>
-              ))}
-            </select>
-          </div>
+          <Link to="/" className="text-sm text-indigo-600 hover:underline">← My Words</Link>
           <button onClick={handleClear} className="text-sm text-gray-400 hover:text-red-500">
             Clear history
           </button>

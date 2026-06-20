@@ -1,7 +1,7 @@
 // VocaPlay.Application/Chat/DTOs/ChatResponseDto.cs
 namespace VocaPlay.Application.Chat.DTOs;
 
-public record ChatActionDto(string Type, Guid? WordSetId, int? WordsAdded);
+public record ChatActionDto(string Type, int? WordsAdded);
 
 public record ChatResponseDto(string Reply, ChatActionDto? Action);
 

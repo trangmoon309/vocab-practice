@@ -2,34 +2,22 @@
 using VocaPlay.Application.Common.Interfaces.Repositories;
 using VocaPlay.Application.Words.DTOs;
 using VocaPlay.Domain.Entities;
-using VocaPlay.Domain.Exceptions;
 
 namespace VocaPlay.Application.Words.Commands;
 
 public class BulkAddWordsCommandHandler
 {
-    private readonly IWordSetRepository _wordSets;
     private readonly IWordRepository _words;
 
-    public BulkAddWordsCommandHandler(IWordSetRepository wordSets, IWordRepository words)
-    {
-        _wordSets = wordSets;
-        _words = words;
-    }
+    public BulkAddWordsCommandHandler(IWordRepository words) => _words = words;
 
     /// <summary>
-    /// Bulk-adds words to a set, skipping duplicates by English term (case-insensitive).
+    /// Bulk-adds words for the user, skipping duplicates by English term (case-insensitive).
     /// Never throws on duplicate — returns skip reasons instead.
     /// </summary>
     public async Task<BulkAddResultDto> Handle(BulkAddWordsCommand command, CancellationToken ct = default)
     {
-        var set = await _wordSets.GetByIdAsync(command.WordSetId, ct)
-            ?? throw new NotFoundException(nameof(WordSet), command.WordSetId);
-
-        if (set.UserId != command.UserId)
-            throw new ForbiddenException();
-
-        var existingEnglish = (await _words.GetEnglishWordsInSetAsync(command.WordSetId, ct))
+        var existingEnglish = (await _words.GetEnglishWordsForUserAsync(command.UserId, ct))
             .Select(e => e.ToLowerInvariant())
             .ToHashSet();
 
@@ -49,7 +37,7 @@ public class BulkAddWordsCommandHandler
             toAdd.Add(new Word
             {
                 Id = Guid.NewGuid(),
-                WordSetId = command.WordSetId,
+                UserId = command.UserId,
                 English = input.English.Trim(),
                 Vietnamese = input.Vietnamese.Trim(),
                 Pronunciation = input.Pronunciation?.Trim(),

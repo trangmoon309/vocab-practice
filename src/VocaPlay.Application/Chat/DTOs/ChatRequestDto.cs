@@ -1,4 +1,4 @@
 // VocaPlay.Application/Chat/DTOs/ChatRequestDto.cs
 namespace VocaPlay.Application.Chat.DTOs;
 
-public record ChatRequestDto(string Message, Guid? WordSetId);
+public record ChatRequestDto(string Message);
