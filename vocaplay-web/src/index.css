@@ -4,5 +4,31 @@
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  background-color: #FDF6EC;
+  color: #363347;
+}
+
+@layer components {
+  .bento-card {
+    @apply rounded-bento bg-white shadow-soft transition-all duration-200;
+  }
+  .bento-card-hover {
+    @apply hover:shadow-soft-hover hover:-translate-y-0.5;
+  }
+  .btn-coral {
+    @apply rounded-bento bg-coral-500 px-5 py-2.5 text-sm font-semibold text-white shadow-soft
+           transition-all duration-150 hover:bg-coral-600 hover:shadow-soft-hover
+           active:scale-[0.97] disabled:opacity-50 disabled:hover:shadow-soft disabled:active:scale-100;
+  }
+  .btn-ghost {
+    @apply rounded-bento border border-lavender-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink-600
+           transition-all duration-150 hover:bg-lavender-50 hover:border-lavender-300
+           active:scale-[0.97];
+  }
+  .input-pastel {
+    @apply rounded-bento border border-lavender-200 bg-white px-4 py-2.5 text-sm text-ink-700
+           placeholder:text-ink-400 transition-colors focus:border-lavender-400 focus:outline-none
+           focus:ring-2 focus:ring-lavender-100;
+  }
 }

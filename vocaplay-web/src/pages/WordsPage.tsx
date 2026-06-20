@@ -29,46 +29,52 @@ function WordForm({
   submitLabel: string
 }) {
   return (
-    <form onSubmit={onSubmit} className="rounded-lg bg-white p-4 shadow space-y-3 mb-4">
-      <div className="grid grid-cols-2 gap-3">
+    <form onSubmit={onSubmit} className="bento-card animate-pop-in mb-5 space-y-3 border border-lavender-100 p-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <input
-          type="text" placeholder="English" required
+          type="text" placeholder="English word" required
           value={input.english}
           onChange={(e) => setInput({ ...input, english: e.target.value })}
-          className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="input-pastel"
         />
         <input
-          type="text" placeholder="Vietnamese" required
+          type="text" placeholder="Vietnamese meaning" required
           value={input.vietnamese}
           onChange={(e) => setInput({ ...input, vietnamese: e.target.value })}
-          className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="input-pastel"
         />
         <input
           type="text" placeholder="Pronunciation (optional)"
           value={input.pronunciation ?? ''}
           onChange={(e) => setInput({ ...input, pronunciation: e.target.value || null })}
-          className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="input-pastel"
         />
         <input
           type="text" placeholder="Example sentence (optional)"
           value={input.exampleSentence ?? ''}
           onChange={(e) => setInput({ ...input, exampleSentence: e.target.value || null })}
-          className="rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+          className="input-pastel"
         />
       </div>
-      <div className="flex gap-2">
-        <button type="submit" disabled={saving}
-          className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50">
+      <div className="flex gap-2 pt-1">
+        <button type="submit" disabled={saving} className="btn-coral">
           {saving ? 'Saving…' : submitLabel}
         </button>
-        <button type="button"
-          onClick={onCancel}
-          className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+        <button type="button" onClick={onCancel} className="btn-ghost">
           Cancel
         </button>
       </div>
     </form>
   )
+}
+
+const LEVEL_COLORS: Record<string, string> = {
+  A1: 'bg-mint-100 text-mint-600',
+  A2: 'bg-mint-100 text-mint-600',
+  B1: 'bg-lavender-100 text-lavender-600',
+  B2: 'bg-lavender-100 text-lavender-600',
+  C1: 'bg-coral-50 text-coral-600',
+  C2: 'bg-coral-50 text-coral-600',
 }
 
 export function WordsPage() {
@@ -136,36 +142,63 @@ export function WordsPage() {
     setShowAddForm(false)
   }
 
-  if (loading) return <div className="flex h-screen items-center justify-center text-gray-400">Loading…</div>
+  const readyToPlay = words.length >= 4
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-cream-100 text-ink-400">
+        Loading your words…
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-cream-100">
       <Navbar />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800">My Words</h2>
-            <p className="text-sm text-gray-400">{words.length} words</p>
+      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+        {/* Bento header grid */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="bento-card col-span-1 bg-mint-100 p-5 sm:col-span-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-mint-600">Total words</p>
+            <p className="mt-2 font-display text-3xl font-bold text-ink-700">{words.length}</p>
+            <p className="mt-1 text-sm text-ink-500">words in your list</p>
           </div>
-          <div className="flex gap-2">
-            <Link
-              to="/chat"
-              className="rounded border border-indigo-600 px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50"
-            >
-              AI Chat
-            </Link>
-            <Link
-              to="/game"
-              className="rounded bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700"
-            >
-              Play
-            </Link>
+
+          <div className="bento-card bg-lavender-100 p-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-lavender-600">Ready to play?</p>
+            <p className="mt-2 font-display text-lg font-bold text-ink-700">
+              {readyToPlay ? 'Let\'s go! 🎉' : `Need ${4 - words.length} more`}
+            </p>
+            <p className="mt-1 text-sm text-ink-500">minimum 4 words to start a game</p>
+          </div>
+
+          <div className="bento-card flex flex-col justify-between bg-white p-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-coral-500">Quick action</p>
+              <p className="mt-2 font-display text-lg font-bold text-ink-700">Add a new word</p>
+            </div>
             <button
               onClick={() => { setShowAddForm(true); setEditingWord(null); setInput(EMPTY_INPUT) }}
-              className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+              className="btn-coral mt-3 w-full"
             >
               + Add word
             </button>
+          </div>
+        </div>
+
+        {/* Action row */}
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-bold text-ink-700">My Words</h2>
+          <div className="flex gap-2">
+            <Link to="/chat" className="btn-ghost">
+              💬 AI Chat
+            </Link>
+            <Link
+              to="/game"
+              className={`btn-coral ${!readyToPlay ? 'pointer-events-none opacity-40' : ''}`}
+            >
+              ▶ Play
+            </Link>
           </div>
         </div>
 
@@ -181,13 +214,15 @@ export function WordsPage() {
         )}
 
         {words.length === 0 ? (
-          <div className="rounded-lg bg-white p-8 text-center text-gray-400 shadow">
-            No words yet. Add some!
+          <div className="bento-card flex flex-col items-center gap-2 p-10 text-center">
+            <span className="text-4xl">🌱</span>
+            <p className="font-display text-lg font-semibold text-ink-700">Your word garden is empty</p>
+            <p className="text-sm text-ink-400">Add your first word to start growing your vocabulary.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {words.map((word) => (
-              <div key={word.id}>
+              <div key={word.id} className={editingWord?.id === word.id ? 'sm:col-span-2' : ''}>
                 {editingWord?.id === word.id ? (
                   <WordForm
                     input={input}
@@ -198,23 +233,39 @@ export function WordsPage() {
                     submitLabel="Save"
                   />
                 ) : (
-                  <div className="flex items-center justify-between rounded-lg bg-white p-4 shadow">
-                    <div>
-                      <span className="font-medium text-gray-800">{word.english}</span>
-                      <span className="mx-2 text-gray-400">—</span>
-                      <span className="text-gray-700">{word.vietnamese}</span>
-                      {word.pronunciation && (
-                        <span className="ml-2 text-sm text-gray-400">/{word.pronunciation}/</span>
-                      )}
-                      {word.exampleSentence && (
-                        <p className="mt-0.5 text-xs text-gray-400 italic">{word.exampleSentence}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => startEdit(word)}
-                        className="text-sm text-indigo-600 hover:underline">Edit</button>
-                      <button onClick={() => handleDelete(word.id)}
-                        className="text-sm text-red-500 hover:underline">Delete</button>
+                  <div className="bento-card bento-card-hover group p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-display text-base font-bold text-ink-700">{word.english}</span>
+                          {word.level && (
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${LEVEL_COLORS[word.level] ?? 'bg-cream-200 text-ink-500'}`}>
+                              {word.level}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-sm text-ink-500">{word.vietnamese}</p>
+                        {word.pronunciation && (
+                          <p className="mt-0.5 text-xs text-ink-400">/{word.pronunciation}/</p>
+                        )}
+                        {word.exampleSentence && (
+                          <p className="mt-1.5 text-xs italic text-ink-400">"{word.exampleSentence}"</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <button
+                          onClick={() => startEdit(word)}
+                          className="rounded-bento px-2 py-1 text-xs font-semibold text-lavender-600 hover:bg-lavender-50"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(word.id)}
+                          className="rounded-bento px-2 py-1 text-xs font-semibold text-coral-500 hover:bg-coral-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

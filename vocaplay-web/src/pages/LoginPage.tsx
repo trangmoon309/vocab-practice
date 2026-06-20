@@ -25,42 +25,46 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow">
-        <h1 className="mb-6 text-2xl font-bold text-indigo-600">VocaPlay</h1>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-cream-100 via-lavender-50 to-mint-50 px-4">
+      <div className="bento-card animate-pop-in w-full max-w-sm p-8">
+        <div className="mb-6 flex items-center gap-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-bento bg-mint-200 text-lg">🌱</span>
+          <h1 className="font-display text-2xl font-bold text-ink-700">VocaPlay</h1>
+        </div>
+        <p className="mb-6 text-sm text-ink-500">Welcome back! Let's keep your streak going.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-600">Email</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+              className="input-pastel w-full"
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-600">Password</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+              className="input-pastel w-full"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="rounded-bento bg-coral-50 px-3 py-2 text-sm text-coral-600">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="btn-coral w-full"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-5 text-center text-sm text-ink-500">
           Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-600 hover:underline">
+          <Link to="/register" className="font-semibold text-lavender-600 hover:underline">
             Register
           </Link>
         </p>

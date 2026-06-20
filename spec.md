@@ -1,6 +1,6 @@
 # spec.md — VocaPlay MVP
 > English vocabulary learning app for Vietnamese learners.  
-> Users build their own word lists, practice with a matching game (English ↔ Vietnamese), and use an AI chatbot to bulk-add words, get explanations, and play text-based quizzes.
+> Users build one flat personal word list, practice with a matching game (English ↔ Vietnamese), and use an AI chatbot to bulk-add words, get explanations, and play text-based quizzes.
 
 **GitHub repo:** `https://github.com/<your-username>/vocab-practice`
 
@@ -8,9 +8,11 @@
 
 ## 1. Project goal
 
-VocaPlay is a web app that helps Vietnamese users learn English vocabulary through self-curated word lists, an interactive matching game, and an AI-powered chatbot assistant. Users register, add their own English–Vietnamese word pairs, organize them into sets, and practice through a card-matching game or conversation with the chatbot.
+VocaPlay is a web app that helps Vietnamese users learn English vocabulary through a self-curated word list, an interactive matching game, and an AI-powered chatbot assistant. Users register, add their own English–Vietnamese word pairs directly to their personal list (no grouping/organizing step), and practice through a card-matching game or conversation with the chatbot.
 
-MVP scope: auth, word management (CRUD), matching game, AI chatbot with 3 capabilities, hosted fully on Supabase + Railway.
+MVP scope: auth, word management (CRUD on a flat per-user word list), matching game, AI chatbot with 3 capabilities, hosted fully on Supabase + Railway.
+
+> **Note (post-MVP simplification):** The original design grouped words into user-created `WordSet`s (like folders/decks). This was removed — each user now has a single flat list of words. Rationale: the grouping step added friction without enough payoff for the MVP's "add words, play game" core loop. All `/wordsets/*` endpoints, the `WordSet` entity/table, and the WordSet UI (set list + set detail pages) were deleted. See §4, §5, §7 for the current (flat) shape — historical references to `WordSet` elsewhere in this doc describe the pre-removal design and are kept only where still illustrative of the migration.
 
 ---
 
@@ -107,23 +109,12 @@ User {
 }
 ```
 
-### WordSet
-```
-WordSet {
-  Id          : Guid        PK
-  UserId      : Guid        FK → User.Id (cascade delete)
-  Title       : string      required, max 100
-  Description : string?     max 500
-  CreatedAt   : DateTime    UTC
-  UpdatedAt   : DateTime    UTC
-}
-```
-
 ### Word
+> `WordSet` has been removed. Words attach directly to the owning `User`.
 ```
 Word {
   Id              : Guid        PK
-  WordSetId       : Guid        FK → WordSet.Id (cascade delete)
+  UserId          : Guid        FK → User.Id (cascade delete)
   English         : string      required, max 200
   Vietnamese      : string      required, max 200
   Pronunciation   : string?     max 200   (IPA or phonetic, e.g. "/ˈæp.əl/")
@@ -138,11 +129,11 @@ Word {
 ```
 
 ### GameSession
+> No longer tied to a `WordSet` — a session is just a score against the user's whole word list.
 ```
 GameSession {
   Id          : Guid        PK
   UserId      : Guid        FK → User.Id
-  WordSetId   : Guid        FK → WordSet.Id
   Score       : int
   TotalPairs  : int
   CompletedAt : DateTime    UTC
@@ -203,10 +194,8 @@ Vercel picks up the deploy automatically after CI passes (Git integration).
 ---
 
 ## 4. Data models — Relationships
-- User 1 → N WordSet
-- WordSet 1 → N Word
+- User 1 → N Word
 - User 1 → N GameSession
-- WordSet 1 → N GameSession
 - User 1 → N ChatMessage
 
 ---
@@ -225,44 +214,16 @@ Auth: all routes except `/auth/*` require `Authorization: Bearer <token>`.
 | POST | `/auth/refresh` | `{ refreshToken }` | `{ accessToken, refreshToken }` |
 | POST | `/auth/logout` | `{ refreshToken }` | `204` |
 
-### Word Sets
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/wordsets` | List all sets for current user |
-| POST | `/wordsets` | Create a new set |
-| GET | `/wordsets/{id}` | Get set + its words |
-| PUT | `/wordsets/{id}` | Update title / description |
-| DELETE | `/wordsets/{id}` | Delete set (cascades words) |
-
-POST/PUT body: `{ "title": "...", "description": "..." }`
-
-GET `/wordsets/{id}` response:
-```json
-{
-  "id": "...", "title": "...", "description": "...",
-  "wordCount": 12,
-  "words": [{
-    "id": "...",
-    "english": "apple",
-    "vietnamese": "quả táo",
-    "pronunciation": "/ˈæp.əl/",
-    "level": "A1",
-    "type": "Noun",
-    "exampleSentence": "I eat an apple every day."
-  }],
-  "createdAt": "..."
-}
-```
-
 ### Words
+> `WordSet` and all `/wordsets/*` routes were removed. Words are flat per-user — no grouping layer.
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/wordsets/{setId}/words` | Add a word |
-| PUT | `/wordsets/{setId}/words/{wordId}` | Update a word |
-| DELETE | `/wordsets/{setId}/words/{wordId}` | Delete a word |
-| POST | `/wordsets/{setId}/words/bulk` | **Bulk add words (used by chatbot)** |
+| GET | `/words` | List all words for current user |
+| POST | `/words` | Add a word |
+| PUT | `/words/{wordId}` | Update a word |
+| DELETE | `/words/{wordId}` | Delete a word |
+| POST | `/words/bulk` | **Bulk add words (used by chatbot)** |
 
 POST/PUT body:
 ```json
@@ -281,7 +242,7 @@ Valid `level` values: `"A1"`, `"A2"`, `"B1"`, `"B2"`, `"C1"`, `"C2"` — backend
 
 Valid `type` values: `"Noun"`, `"Verb"`, `"Adjective"`, `"Adverb"`, `"Preposition"`, `"Conjunction"`, `"Pronoun"`, `"Interjection"`.
 
-POST `/wordsets/{setId}/words/bulk` body:
+POST `/words/bulk` body:
 ```json
 {
   "words": [
@@ -291,23 +252,24 @@ POST `/wordsets/{setId}/words/bulk` body:
 }
 ```
 Response: `{ "added": 12, "skipped": 2, "skippedReasons": ["duplicate: apple"] }`
-Duplicates (same English in the same set) are skipped, not errored.
+Duplicates (same English, case-insensitive, across the whole user's list) are skipped, not errored.
 
 ### Game
+> Game pairs now draw from the user's entire word list, not a specific set.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/wordsets/{setId}/game` | Get shuffled pairs |
+| GET | `/game/pairs` | Get shuffled pairs from the user's word list |
 | POST | `/game/sessions` | Save completed session |
 | GET | `/game/sessions` | List past sessions |
 
-GET `/wordsets/{setId}/game` response:
+GET `/game/pairs` response:
 ```json
-{ "wordSetId": "...", "wordSetTitle": "...", "pairs": [{ "id": "...", "english": "...", "vietnamese": "..." }] }
+{ "pairs": [{ "id": "...", "english": "...", "vietnamese": "..." }] }
 ```
-Minimum 4 pairs; return `400` with message if fewer.
+Minimum 4 words in the user's list; return `400` with message if fewer.
 
-POST `/game/sessions` body: `{ "wordSetId": "...", "score": 8, "totalPairs": 10 }`
+POST `/game/sessions` body: `{ "score": 8, "totalPairs": 10 }`
 
 ### Chatbot
 
@@ -320,18 +282,16 @@ POST `/game/sessions` body: `{ "wordSetId": "...", "score": 8, "totalPairs": 10 
 POST `/chat` request:
 ```json
 {
-  "message": "Add these words to my 'Daily' set: apple = quả táo, book = cuốn sách",
-  "wordSetId": "optional-uuid-for-context"
+  "message": "Add these words: apple = quả táo, book = cuốn sách"
 }
 ```
 
 POST `/chat` response:
 ```json
 {
-  "reply": "I've added 2 words to your 'Daily' set: apple, book.",
+  "reply": "I've added 2 words to your list: apple, book.",
   "action": {
     "type": "BULK_ADD_WORDS",
-    "wordSetId": "...",
     "wordsAdded": 2
   }
 }
@@ -346,11 +306,11 @@ POST `/chat` response:
 ### Three capabilities
 
 **1. Bulk add words**
-User pastes a list of vocab in any format (comma-separated, line-by-line, "word = translation", etc.). The bot parses it, calls `POST /wordsets/{setId}/words/bulk` internally, and confirms what was added.
+User pastes a list of vocab in any format (comma-separated, line-by-line, "word = translation", etc.). The bot parses it, calls `POST /words/bulk` internally, and confirms what was added.
 
 Example prompts:
-- *"Add these to my 'Travel' set: hotel = khách sạn, airport = sân bay, passport = hộ chiếu"*
-- *"I have: apple, banana, cherry — add them to Daily set with Vietnamese translations"* (bot auto-translates using GPT-4o knowledge)
+- *"Add these: hotel = khách sạn, airport = sân bay, passport = hộ chiếu"*
+- *"I have: apple, banana, cherry — add them with Vietnamese translations"* (bot auto-translates using GPT-4o knowledge)
 
 **2. Explain words / give examples**
 User asks about a word's meaning, usage, or pronunciation tip.
@@ -360,11 +320,11 @@ Example prompts:
 - *"Explain the difference between 'affect' and 'effect' in Vietnamese"*
 
 **3. Text-based quiz**
-Bot picks random words from a given set and quizzes the user in chat. User types the answer; bot evaluates and keeps score.
+Bot picks random words from the user's word list and quizzes the user in chat. User types the answer; bot evaluates and keeps score.
 
 Example prompts:
-- *"Quiz me on my 'Animals' word set — 5 questions"*
-- *"Give me 3 fill-in-the-blank sentences from my Daily set"*
+- *"Quiz me on my words — 5 questions"*
+- *"Give me 3 fill-in-the-blank sentences from my list"*
 
 ### System prompt (sent as the `system` role on every `/chat` call)
 
@@ -374,7 +334,7 @@ You respond in a mix of English and Vietnamese — use Vietnamese to explain mea
 use English for the vocab terms themselves.
 
 You have three jobs:
-1. BULK ADD WORDS: When the user gives you a list of words to add to a word set, parse them,
+1. BULK ADD WORDS: When the user gives you a list of words to add, parse them,
    auto-fill missing Vietnamese translations, pronunciation (IPA), CEFR level (A1–C2), and
    word type (Noun/Verb/etc.) using your knowledge, and respond with a JSON action block so
    the backend can call the bulk-add API.
@@ -390,7 +350,7 @@ Keep replies friendly, concise, and encouraging. Use 🌟 sparingly for correct 
 
 ### Backend parsing logic (`ChatService.cs`)
 - After receiving GPT-4o response, scan for `%%ACTION%%...%%END%%` block.
-- If found: parse JSON, call `WordService.BulkAddAsync(wordSetId, words)`, strip the action block from the reply shown to the user, and populate the `action` field in the API response.
+- If found: parse JSON, call `WordService.BulkAddAsync(userId, words)`, strip the action block from the reply shown to the user, and populate the `action` field in the API response.
 - Persist both user message and assistant reply to `ChatMessage` table.
 - Send last 10 messages as context to GPT-4o on every call (sliding window).
 
@@ -415,7 +375,6 @@ vocab-practice/
     │   ── VocaPlay.Domain/                   (no dependencies on other projects)
     │   │   ├── Entities/
     │   │   │   ├── User.cs
-    │   │   │   ├── WordSet.cs
     │   │   │   ├── Word.cs
     │   │   │   ├── GameSession.cs
     │   │   │   └── ChatMessage.cs
@@ -425,7 +384,6 @@ vocab-practice/
     │   │   ├── Interfaces/
     │   │   │   ├── Repositories/
     │   │   │   │   ├── IUserRepository.cs
-    │   │   │   │   ├── IWordSetRepository.cs
     │   │   │   │   ├── IWordRepository.cs
     │   │   │   │   ├── IGameSessionRepository.cs
     │   │   │   │   └── IChatRepository.cs
@@ -453,23 +411,14 @@ vocab-practice/
     │   │   │   └── DTOs/
     │   │   │       ├── AuthRequestDto.cs
     │   │   │       └── AuthResponseDto.cs
-    │   │   ├── WordSets/
-    │   │   │   ├── Commands/
-    │   │   │   │   ├── CreateWordSetCommand.cs + Handler
-    │   │   │   │   ├── UpdateWordSetCommand.cs + Handler
-    │   │   │   │   └── DeleteWordSetCommand.cs + Handler
-    │   │   │   ├── Queries/
-    │   │   │   │   ├── GetWordSetsQuery.cs + Handler
-    │   │   │   │   └── GetWordSetByIdQuery.cs + Handler
-    │   │   │   └── DTOs/
-    │   │   │       ├── WordSetDto.cs
-    │   │   │       └── WordSetDetailDto.cs
-    │   │   ├── Words/
+    │   │   ├── Words/                        (WordSets layer removed — flat per-user words)
     │   │   │   ├── Commands/
     │   │   │   │   ├── AddWordCommand.cs + Handler
     │   │   │   │   ├── UpdateWordCommand.cs + Handler
     │   │   │   │   ├── DeleteWordCommand.cs + Handler
     │   │   │   │   └── BulkAddWordsCommand.cs + Handler
+    │   │   │   ├── Queries/
+    │   │   │   │   └── GetWordsQuery.cs + Handler
     │   │   │   └── DTOs/
     │   │   │       ├── WordDto.cs
     │   │   │       └── BulkAddResultDto.cs
@@ -497,13 +446,11 @@ vocab-practice/
     │   │   │   ├── Migrations/
     │   │   │   └── Repositories/
     │   │   │       ├── UserRepository.cs
-    │   │   │       ├── WordSetRepository.cs
     │   │   │       ├── WordRepository.cs
     │   │   │       ├── GameSessionRepository.cs
     │   │   │       └── ChatRepository.cs
     │   │   ├── Configurations/               (EF Fluent API per entity)
     │   │   │   ├── UserConfiguration.cs
-    │   │   │   ├── WordSetConfiguration.cs
     │   │   │   ├── WordConfiguration.cs
     │   │   │   ├── GameSessionConfiguration.cs
     │   │   │   └── ChatMessageConfiguration.cs
@@ -516,7 +463,6 @@ vocab-practice/
     │   └── VocaPlay.Api/                     (depends on: Application + Infrastructure)
     │       ├── Controllers/
     │       │   ├── AuthController.cs
-    │       │   ├── WordSetsController.cs
     │       │   ├── WordsController.cs
     │       │   ├── GameController.cs
     │       │   └── ChatController.cs
@@ -553,11 +499,10 @@ Controllers call handlers directly via injected interfaces — no MediatR depend
 
 Example flow for "Add a word":
 ```
-POST /wordsets/{setId}/words
-  → WordsController.AddWord(AddWordCommand)
+POST /words
+  → WordsController.Add(AddWordCommand)
     → AddWordCommandHandler.Handle(command)
-      → IWordSetRepository.GetByIdAsync()   (ownership check)
-      → IWordRepository.AddAsync(word)
+      → IWordRepository.AddAsync(word)      (word.UserId set from JWT — no ownership lookup needed)
       → returns WordDto
 ```
 
@@ -577,46 +522,43 @@ vocaplay-web/
 │   ├── api/
 │   │   ├── axios.ts
 │   │   ├── auth.ts
-│   │   ├── wordsets.ts
+│   │   ├── words.ts                ← flat words API (replaces wordsets.ts)
 │   │   ├── game.ts
-│   │   └── chat.ts                 ← new
+│   │   └── chat.ts
 │   ├── context/
 │   │   └── AuthContext.tsx
 │   ├── pages/
 │   │   ├── LoginPage.tsx
 │   │   ├── RegisterPage.tsx
-│   │   ├── DashboardPage.tsx
-│   │   ├── WordSetDetailPage.tsx
-│   │   └── GamePage.tsx
+│   │   ├── WordsPage.tsx           (bento-grid dashboard — replaces WordSetsPage + WordSetDetailPage)
+│   │   ├── GamePage.tsx
+│   │   └── ChatPage.tsx
 │   ├── components/
-│   │   ├── layout/
-│   │   │   ├── Navbar.tsx
-│   │   │   └── ProtectedRoute.tsx
-│   │   ├── wordset/
-│   │   │   ├── WordSetCard.tsx
-│   │   │   ├── WordSetForm.tsx
-│   │   │   └── WordTable.tsx       (columns: English, Vietnamese, Pronunciation, Level, Type, Example)
-│   │   ├── word/
-│   │   │   └── WordForm.tsx
-│   │   ├── game/
-│   │   │   ├── MatchingGame.tsx
-│   │   │   └── GameResult.tsx
-│   │   └── chat/                   ← new
-│   │       ├── ChatWidget.tsx      (floating bubble, visible on all pages)
-│   │       ├── ChatWindow.tsx      (message list + input)
-│   │       └── ChatMessage.tsx     (single message bubble)
+│   │   └── layout/
+│   │       ├── Navbar.tsx
+│   │       └── ProtectedRoute.tsx
 │   ├── hooks/
-│   │   ├── useAuth.ts
-│   │   └── useChat.ts              ← new
+│   │   └── useAuth.ts
 │   ├── types/
 │   │   └── index.ts
 │   ├── App.tsx
 │   └── main.tsx
 ├── index.html
-├── tailwind.config.ts
+├── tailwind.config.js
 ├── vite.config.ts
 └── package.json
 ```
+
+### UI design system (bento-grid pastel aesthetic)
+The frontend uses a calm, premium "minimalist bento grid" visual style:
+
+- **Palette** (Tailwind custom colors in `tailwind.config.js`): `mint` (soft mint green, success/stat accents), `lavender` (gentle lavender, secondary actions/nav), `cream` (warm cream, page background), `coral` (high-contrast CTA color), `ink` (neutral text tones).
+- **Shape language**: 16px rounded corners everywhere via the `rounded-bento` utility (maps to `border-radius: 16px`). Cards use the shared `.bento-card` class (white surface, soft shadow, rounded-bento).
+- **Buttons**: `.btn-coral` for primary/CTA actions (Add word, Play, Send, Sign in), `.btn-ghost` for secondary actions. High contrast coral (`#FF6B52` family) draws the eye to the one action that matters per screen.
+- **Inputs**: shared `.input-pastel` class — rounded, lavender-tinted border, soft focus ring.
+- **Motion**: subtle hover lift (`hover:-translate-y-0.5`) and shadow deepening (`shadow-soft` → `shadow-soft-hover`) on interactive cards; `animate-pop-in` for newly-revealed forms/results.
+- **Typography**: `Quicksand` (rounded, friendly) for headings via `font-display`, `Inter` for body text via default `font-sans`. Both loaded from Google Fonts in `index.html`.
+- **Layout pattern**: `WordsPage` opens with a 3-card bento header row (total words / game-readiness / quick-add CTA) in mint/lavender/cream, then a responsive 2-column grid of individual word cards below — establishing hierarchy (stats → primary action → content) before the user scans their list.
 
 ---
 

@@ -54,28 +54,31 @@ export function ChatPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-cream-100">
       <Navbar />
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-6 sm:px-6">
         <div className="mb-4 flex items-center justify-between">
-          <Link to="/" className="text-sm text-indigo-600 hover:underline">← My Words</Link>
-          <button onClick={handleClear} className="text-sm text-gray-400 hover:text-red-500">
+          <Link to="/" className="text-sm font-semibold text-lavender-600 hover:underline">← My Words</Link>
+          <button onClick={handleClear} className="text-sm font-medium text-ink-400 hover:text-coral-500">
             Clear history
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto rounded-lg bg-white shadow p-4 space-y-3 min-h-[400px] max-h-[60vh]">
+        <div className="bento-card flex-1 space-y-3 overflow-y-auto p-5 min-h-[420px] max-h-[60vh]">
           {messages.length === 0 && (
-            <p className="text-center text-sm text-gray-400 mt-8">
-              Ask me to add words, quiz you, or explain vocabulary!
-            </p>
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+              <span className="text-3xl">🤖</span>
+              <p className="text-sm font-medium text-ink-500">
+                Ask me to add words, quiz you, or explain vocabulary!
+              </p>
+            </div>
           )}
           {messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] rounded-lg px-4 py-2 text-sm ${
+              <div className={`max-w-[75%] rounded-bento px-4 py-2.5 text-sm shadow-soft ${
                 msg.role === 'user'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-coral-500 text-white'
+                  : 'bg-lavender-100 text-ink-700'
               }`}>
                 {msg.content}
               </div>
@@ -83,7 +86,7 @@ export function ChatPage() {
           ))}
           {sending && (
             <div className="flex justify-start">
-              <div className="rounded-lg bg-gray-100 px-4 py-2 text-sm text-gray-400">Thinking…</div>
+              <div className="rounded-bento bg-lavender-50 px-4 py-2.5 text-sm text-ink-400">Thinking…</div>
             </div>
           )}
           <div ref={bottomRef} />
@@ -96,12 +99,12 @@ export function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={sending}
-            className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
+            className="input-pastel flex-1 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+            className="btn-coral"
           >
             Send
           </button>

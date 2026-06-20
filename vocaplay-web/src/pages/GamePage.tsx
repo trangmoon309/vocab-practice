@@ -67,40 +67,46 @@ export function GamePage() {
       setTimeout(() => {
         setCardStates((s) => ({ ...s, [selected.id]: 'idle', [card.id]: 'idle' }))
         setSelected(null)
-      }, 800)
+      }, 700)
     }
   }
 
   const stateClasses: Record<CardState, string> = {
-    idle: 'bg-white border-gray-200 hover:border-indigo-400 hover:shadow cursor-pointer',
-    selected: 'bg-indigo-50 border-indigo-500 cursor-pointer',
-    matched: 'bg-green-50 border-green-400 opacity-60 cursor-default',
-    wrong: 'bg-red-50 border-red-400 cursor-default',
+    idle: 'bg-white border-lavender-100 hover:border-lavender-300 hover:shadow-soft-hover hover:-translate-y-0.5 cursor-pointer',
+    selected: 'bg-lavender-100 border-lavender-400 shadow-soft-hover cursor-pointer',
+    matched: 'bg-mint-100 border-mint-300 opacity-60 cursor-default scale-[0.97]',
+    wrong: 'bg-coral-50 border-coral-300 cursor-default animate-pulse',
   }
 
-  if (loading) return <div className="flex h-screen items-center justify-center text-gray-400">Loading…</div>
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-cream-100 text-ink-400">
+        Shuffling your words…
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-cream-100">
       <Navbar />
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <div className="mb-4 flex items-center gap-2">
-          <Link to="/" className="text-sm text-indigo-600 hover:underline">← My Words</Link>
+      <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
+        <div className="mb-4">
+          <Link to="/" className="text-sm font-semibold text-lavender-600 hover:underline">← My Words</Link>
         </div>
 
         {done ? (
-          <div className="rounded-lg bg-white p-10 text-center shadow">
-            <p className="text-4xl font-bold text-green-600">🎉</p>
-            <p className="mt-2 text-xl font-semibold">All matched!</p>
-            <p className="mt-1 text-gray-500">{score} / {total} pairs</p>
+          <div className="bento-card animate-pop-in p-10 text-center">
+            <p className="text-5xl">🎉</p>
+            <p className="mt-3 font-display text-2xl font-bold text-ink-700">All matched!</p>
+            <p className="mt-1 text-ink-500">{score} / {total} pairs — nice work!</p>
             <div className="mt-6 flex justify-center gap-3">
               <button
                 onClick={() => { setDone(false); setScore(0); setLoading(true); gameApi.getGamePairs().then((r) => { buildCards(r.data.pairs); setLoading(false) }) }}
-                className="rounded bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+                className="btn-coral"
               >
                 Play again
               </button>
-              <Link to="/" className="rounded border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+              <Link to="/" className="btn-ghost">
                 Back to words
               </Link>
             </div>
@@ -108,15 +114,17 @@ export function GamePage() {
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-semibold text-gray-700">Match the pairs</h2>
-              <span className="text-sm text-gray-400">{score} / {total} matched</span>
+              <h2 className="font-display text-lg font-bold text-ink-700">Match the pairs</h2>
+              <span className="rounded-full bg-lavender-100 px-3 py-1 text-sm font-semibold text-lavender-600">
+                {score} / {total} matched
+              </span>
             </div>
             <div className="grid grid-cols-4 gap-3">
               {cards.map((card) => (
                 <button
                   key={card.id}
                   onClick={() => handleSelect(card)}
-                  className={`rounded-lg border-2 p-3 text-sm font-medium text-gray-700 transition-all ${stateClasses[cardStates[card.id]]}`}
+                  className={`rounded-bento border-2 p-3 text-sm font-semibold text-ink-700 transition-all duration-150 ${stateClasses[cardStates[card.id]]}`}
                 >
                   {card.text}
                 </button>
