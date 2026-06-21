@@ -190,9 +190,6 @@ export function WordsPage() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-xl font-bold text-ink-700">My Words</h2>
           <div className="flex gap-2">
-            <Link to="/chat" className="btn-ghost">
-              💬 AI Chat
-            </Link>
             <Link
               to="/game"
               className={`btn-coral ${!readyToPlay ? 'pointer-events-none opacity-40' : ''}`}

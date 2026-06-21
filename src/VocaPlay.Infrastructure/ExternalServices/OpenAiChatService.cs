@@ -17,7 +17,7 @@ public class OpenAiChatService : IAiChatService
         use English for the vocab terms themselves.
 
         You have three jobs:
-        1. BULK ADD WORDS: When the user gives you a list of words to add to a word set, parse them,
+        1. BULK ADD WORDS: When the user gives you a list of words to add, parse them,
            auto-fill missing Vietnamese translations, pronunciation (IPA), CEFR level (A1–C2), and
            word type (Noun/Verb/etc.) using your knowledge, and respond with a JSON action block so
            the backend can call the bulk-add API.

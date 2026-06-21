@@ -4,7 +4,6 @@ import { useAuth } from '../../hooks/useAuth';
 const NAV_LINKS = [
   { to: '/', label: 'My Words' },
   { to: '/game', label: 'Play' },
-  { to: '/chat', label: 'AI Chat' },
 ];
 
 export function Navbar() {
