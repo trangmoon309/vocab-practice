@@ -1,12 +1,20 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/', { replace: true })
+    }
+  }, [isAuthenticated, isLoading, navigate])
+  const savedEmail = localStorage.getItem('rememberedEmail') ?? ''
+  const [email, setEmail] = useState(savedEmail)
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(!!savedEmail)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -15,7 +23,12 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await login(email, password)
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
+      }
+      await login(email, password, rememberMe)
       navigate('/')
     } catch {
       setError('Invalid email or password.')
@@ -34,9 +47,12 @@ export function LoginPage() {
         <p className="mb-6 text-sm text-ink-500">Welcome back! Let's keep your streak going.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-ink-600">Email</label>
+            <label htmlFor="email" className="mb-1 block text-sm font-semibold text-ink-600">Email</label>
             <input
+              id="email"
+              name="email"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -44,15 +60,27 @@ export function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-ink-600">Password</label>
+            <label htmlFor="password" className="mb-1 block text-sm font-semibold text-ink-600">Password</label>
             <input
+              id="password"
+              name="password"
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input-pastel w-full"
             />
           </div>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="h-4 w-4 rounded accent-coral-400"
+            />
+            <span className="text-sm text-ink-500">Remember me</span>
+          </label>
           {error && <p className="rounded-bento bg-coral-50 px-3 py-2 text-sm text-coral-600">{error}</p>}
           <button
             type="submit"

@@ -1,0 +1,13 @@
+**/.git
+**/.gitignore
+**/bin
+**/obj
+**/*.user
+**/node_modules
+vocaplay-web/
+tests/
+*.md
+.ai/
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json

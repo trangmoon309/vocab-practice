@@ -46,9 +46,10 @@ public class JwtTokenService : IJwtTokenService
         var handler = new JwtSecurityTokenHandler();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret));
 
+        ClaimsPrincipal principal;
         try
         {
-            var principal = handler.ValidateToken(refreshToken, new TokenValidationParameters
+            principal = handler.ValidateToken(refreshToken, new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidIssuer = _settings.Issuer,
@@ -59,17 +60,19 @@ public class JwtTokenService : IJwtTokenService
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             }, out _);
-
-            var purposeClaim = principal.FindFirst("purpose")?.Value;
-            if (purposeClaim != "refresh") return null;
-
-            var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            return Guid.TryParse(sub, out var userId) ? userId : null;
         }
         catch
         {
             return null;
         }
+
+        var purposeClaim = principal.FindFirst("purpose")?.Value;
+        if (purposeClaim != "refresh") return null;
+
+        // JwtSecurityTokenHandler maps "sub" → ClaimTypes.NameIdentifier; check both
+        var sub = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(sub, out var userId) ? userId : null;
     }
 
     private string BuildToken(IEnumerable<Claim> claims, DateTime expires)

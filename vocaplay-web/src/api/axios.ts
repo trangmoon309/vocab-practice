@@ -26,20 +26,28 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 let refreshPromise: Promise<string | null> | null = null;
 
+function getTokenStorage(): Storage | null {
+  if (localStorage.getItem('refreshToken')) return localStorage;
+  if (sessionStorage.getItem('refreshToken')) return sessionStorage;
+  return null;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) return null;
+  const storage = getTokenStorage();
+  const refreshToken = storage?.getItem('refreshToken') ?? null;
+  if (!storage || !refreshToken) return null;
 
   try {
     const response = await axios.post<TokenResponse>(`${BASE_URL}/auth/refresh`, {
       refreshToken,
     });
     setAccessToken(response.data.accessToken);
-    localStorage.setItem('refreshToken', response.data.refreshToken);
+    storage.setItem('refreshToken', response.data.refreshToken);
     return response.data.accessToken;
   } catch {
     setAccessToken(null);
-    localStorage.removeItem('refreshToken');
+    storage.removeItem('refreshToken');
+    storage.removeItem('user');
     return null;
   }
 }
