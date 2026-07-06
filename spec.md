@@ -123,6 +123,7 @@ Word {
                                                 "Preposition"|"Conjunction"|
                                                 "Pronoun"|"Interjection"|null
   ExampleSentence : string?     max 500
+  EnglishDefinition: string?    max 500  (short English definition, used by "Definition Match")
   CreatedAt       : DateTime    UTC
   UpdatedAt       : DateTime    UTC
 }
@@ -233,10 +234,11 @@ POST/PUT body:
   "pronunciation": "/ˈæp.əl/",
   "level": "A1",
   "type": "Noun",
-  "exampleSentence": "I eat an apple every day."
+  "exampleSentence": "I eat an apple every day.",
+  "englishDefinition": "A round fruit with red, green, or yellow skin."
 }
 ```
-`pronunciation`, `level`, `type`, `exampleSentence` are all optional.
+`pronunciation`, `level`, `type`, `exampleSentence`, `englishDefinition` are all optional. `englishDefinition` powers the "Definition Match" game mode (see §8) — words without one are simply excluded from that mode, not an error.
 
 Valid `level` values: `"A1"`, `"A2"`, `"B1"`, `"B2"`, `"C1"`, `"C2"` — backend validates against this enum, returns `400` for other values.
 
@@ -255,19 +257,24 @@ Response: `{ "added": 12, "skipped": 2, "skippedReasons": ["duplicate: apple"] }
 Duplicates (same English, case-insensitive, across the whole user's list) are skipped, not errored.
 
 ### Game
-> Game pairs now draw from the user's entire word list, not a specific set.
+> Game pairs draw from the user's entire word list, not a specific set. Two game modes exist
+> (`GameMode` enum: `Translation` | `Definition`), selectable per request via a `mode` query param.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/game/pairs` | Get shuffled pairs from the user's word list |
+| GET | `/game/pairs?mode=Translation\|Definition` | Get shuffled pairs from the user's word list (`mode` defaults to `Translation`) |
 | POST | `/game/sessions` | Save completed session |
 | GET | `/game/sessions` | List past sessions |
 
+**Game modes (user-facing names):**
+- **"Translation Match"** (`mode=Translation`) — English word ↔ Vietnamese meaning. Uses `Word.Vietnamese`. Minimum 4 words in the user's list.
+- **"Definition Match"** (`mode=Definition`) — English word ↔ English definition. Uses `Word.EnglishDefinition`; words without one are excluded. Minimum 4 *eligible* words (i.e. with a non-empty `EnglishDefinition`).
+
 GET `/game/pairs` response:
 ```json
-{ "pairs": [{ "id": "...", "english": "...", "vietnamese": "..." }] }
+{ "mode": "Translation", "pairs": [{ "id": "...", "english": "...", "match": "..." }] }
 ```
-Minimum 4 words in the user's list; return `400` with message if fewer.
+`match` is the Vietnamese meaning (Translation mode) or the English definition (Definition mode) — the field name is generic so the frontend renders either mode the same way. Returns `400` with a mode-specific message if fewer than 4 eligible words exist.
 
 POST `/game/sessions` body: `{ "score": 8, "totalPairs": 10 }`
 
@@ -562,16 +569,24 @@ The frontend uses a calm, premium "minimalist bento grid" visual style:
 
 ---
 
-## 8. Game mechanics — Matching game
+## 8. Game mechanics — Matching games
 
-- Grid of cards: left column = English (shuffled), right column = Vietnamese (shuffled independently).
-- User clicks one English card + one Vietnamese card to attempt a match.
-- Correct: both cards turn green and lock out.
-- Wrong: both cards flash red and reset.
+Users pick a game mode from a selection screen (`/game` in the frontend) before playing. Both modes
+share the same matching mechanic; they differ only in what's shown on the right-hand cards.
+
+| Mode | User-facing name | Left card | Right card | Source field |
+|---|---|---|---|---|
+| `Translation` | **Translation Match** | English word | Vietnamese meaning | `Word.Vietnamese` |
+| `Definition` | **Definition Match** | English word | English definition | `Word.EnglishDefinition` |
+
+- Grid of cards: left column = English (shuffled), right column = the mode's `match` value (shuffled independently).
+- User clicks one left card + one right card to attempt a match.
+- Correct: both cards turn green (mint) and lock out.
+- Wrong: both cards flash red (coral) and reset.
 - Game ends when all pairs matched.
 - Score = correct first-attempt matches / total pairs.
-- Save via `POST /game/sessions` on completion.
-- Minimum 4 pairs to start; recommend 6–12.
+- Save via `POST /game/sessions` on completion (mode is not currently persisted on `GameSession` — only score/totalPairs).
+- Minimum 4 *eligible* pairs to start (eligible = has the field the mode needs); recommend 6–12. Definition Match silently excludes words missing an `EnglishDefinition` rather than erroring on them individually — the 4-minimum check applies only to the eligible subset.
 
 ---
 

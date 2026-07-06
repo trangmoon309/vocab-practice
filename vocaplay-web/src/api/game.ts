@@ -1,8 +1,8 @@
 import { api } from './axios';
-import type { GamePairs, GameSession, SaveGameSessionInput } from '../types';
+import type { GameMode, GamePairs, GameSession, SaveGameSessionInput } from '../types';
 
-export function getGamePairs() {
-  return api.get<GamePairs>('/game/pairs');
+export function getGamePairs(mode: GameMode) {
+  return api.get<GamePairs>('/game/pairs', { params: { mode } });
 }
 
 export function saveGameSession(input: SaveGameSessionInput) {

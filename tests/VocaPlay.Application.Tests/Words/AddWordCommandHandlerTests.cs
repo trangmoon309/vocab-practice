@@ -27,7 +27,7 @@ public class AddWordCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         var result = await _handler.Handle(new AddWordCommand(
-            userId, "apple", "qua tao", "/ae.pel/", "A1", "Noun", "I eat an apple."));
+            userId, "apple", "qua tao", "/ae.pel/", "A1", "Noun", "I eat an apple.", "A round fruit."));
 
         Assert.Equal("apple", result.English);
         Assert.Equal("qua tao", result.Vietnamese);
@@ -40,7 +40,7 @@ public class AddWordCommandHandlerTests
         _words.Setup(r => r.AddAsync(It.IsAny<Word>(), default)).Returns(Task.CompletedTask);
 
         var result = await _handler.Handle(new AddWordCommand(
-            Guid.NewGuid(), "  apple  ", "  qua tao  ", null, null, null, null));
+            Guid.NewGuid(), "  apple  ", "  qua tao  ", null, null, null, null, null));
 
         Assert.Equal("apple", result.English);
         Assert.Equal("qua tao", result.Vietnamese);
@@ -52,7 +52,7 @@ public class AddWordCommandHandlerTests
     public async Task Handle_Throws_WhenLevelInvalid(string level)
     {
         await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new AddWordCommand(Guid.NewGuid(), "apple", "qua tao", null, level, null, null)));
+            _handler.Handle(new AddWordCommand(Guid.NewGuid(), "apple", "qua tao", null, level, null, null, null)));
 
         _words.Verify(r => r.AddAsync(It.IsAny<Word>(), default), Times.Never);
     }
@@ -61,6 +61,6 @@ public class AddWordCommandHandlerTests
     public async Task Handle_Throws_WhenTypeInvalid()
     {
         await Assert.ThrowsAsync<ValidationException>(() =>
-            _handler.Handle(new AddWordCommand(Guid.NewGuid(), "apple", "qua tao", null, null, "NotAType", null)));
+            _handler.Handle(new AddWordCommand(Guid.NewGuid(), "apple", "qua tao", null, null, "NotAType", null, null)));
     }
 }

@@ -11,6 +11,7 @@ const EMPTY_INPUT: WordInput = {
   level: null,
   type: null,
   exampleSentence: '',
+  englishDefinition: '',
 }
 
 function WordForm({
@@ -54,6 +55,12 @@ function WordForm({
           value={input.exampleSentence ?? ''}
           onChange={(e) => setInput({ ...input, exampleSentence: e.target.value || null })}
           className="input-pastel"
+        />
+        <input
+          type="text" placeholder="English definition (optional, for Definition Match)"
+          value={input.englishDefinition ?? ''}
+          onChange={(e) => setInput({ ...input, englishDefinition: e.target.value || null })}
+          className="input-pastel sm:col-span-2"
         />
       </div>
       <div className="flex gap-2 pt-1">
@@ -138,6 +145,7 @@ export function WordsPage() {
       level: word.level,
       type: word.type,
       exampleSentence: word.exampleSentence ?? '',
+      englishDefinition: word.englishDefinition ?? '',
     })
     setShowAddForm(false)
   }
@@ -247,6 +255,9 @@ export function WordsPage() {
                         )}
                         {word.exampleSentence && (
                           <p className="mt-1.5 text-xs italic text-ink-400">"{word.exampleSentence}"</p>
+                        )}
+                        {word.englishDefinition && (
+                          <p className="mt-1 text-xs text-ink-400">📖 {word.englishDefinition}</p>
                         )}
                       </div>
                       <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">

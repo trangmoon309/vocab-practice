@@ -24,8 +24,8 @@ public class BulkAddWordsCommandHandlerTests
 
         var input = new List<WordInput>
         {
-            new("apple", "qua tao", null, "A1", "Noun", null),
-            new("book", "sach", null, "A1", "Noun", null),
+            new("apple", "qua tao", null, "A1", "Noun", null, null),
+            new("book", "sach", null, "A1", "Noun", null, null),
         };
 
         var result = await _handler.Handle(new BulkAddWordsCommand(userId, input));
@@ -41,7 +41,7 @@ public class BulkAddWordsCommandHandlerTests
         var userId = Guid.NewGuid();
         _words.Setup(r => r.GetEnglishWordsForUserAsync(userId, default)).ReturnsAsync(new List<string> { "Apple" });
 
-        var input = new List<WordInput> { new("apple", "qua tao", null, null, null, null) };
+        var input = new List<WordInput> { new("apple", "qua tao", null, null, null, null, null) };
 
         var result = await _handler.Handle(new BulkAddWordsCommand(userId, input));
 
@@ -59,8 +59,8 @@ public class BulkAddWordsCommandHandlerTests
 
         var input = new List<WordInput>
         {
-            new("apple", "qua tao 1", null, null, null, null),
-            new("Apple", "qua tao 2", null, null, null, null),
+            new("apple", "qua tao 1", null, null, null, null, null),
+            new("Apple", "qua tao 2", null, null, null, null, null),
         };
 
         var result = await _handler.Handle(new BulkAddWordsCommand(userId, input));
@@ -75,7 +75,7 @@ public class BulkAddWordsCommandHandlerTests
         var userId = Guid.NewGuid();
         _words.Setup(r => r.GetEnglishWordsForUserAsync(userId, default)).ReturnsAsync(new List<string> { "apple" });
 
-        await _handler.Handle(new BulkAddWordsCommand(userId, new List<WordInput> { new("apple", "x", null, null, null, null) }));
+        await _handler.Handle(new BulkAddWordsCommand(userId, new List<WordInput> { new("apple", "x", null, null, null, null, null) }));
 
         _words.Verify(r => r.AddRangeAsync(It.IsAny<IEnumerable<Word>>(), default), Times.Never);
     }

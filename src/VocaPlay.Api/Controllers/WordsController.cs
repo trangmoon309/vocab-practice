@@ -49,7 +49,7 @@ public class WordsController : ControllerBase
         var result = await _add.Handle(new AddWordCommand(
             _currentUser.UserId,
             request.English, request.Vietnamese, request.Pronunciation,
-            request.Level, request.Type, request.ExampleSentence), ct);
+            request.Level, request.Type, request.ExampleSentence, request.EnglishDefinition), ct);
         return Ok(result);
     }
 
@@ -59,7 +59,7 @@ public class WordsController : ControllerBase
         var result = await _update.Handle(new UpdateWordCommand(
             wordId, _currentUser.UserId,
             request.English, request.Vietnamese, request.Pronunciation,
-            request.Level, request.Type, request.ExampleSentence), ct);
+            request.Level, request.Type, request.ExampleSentence, request.EnglishDefinition), ct);
         return Ok(result);
     }
 
@@ -84,6 +84,7 @@ public record WordRequestDto(
     string? Pronunciation,
     string? Level,
     string? Type,
-    string? ExampleSentence);
+    string? ExampleSentence,
+    string? EnglishDefinition);
 
 public record BulkAddWordsRequestDto(IReadOnlyList<WordInput> Words);

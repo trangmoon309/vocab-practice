@@ -37,6 +37,7 @@ export interface Word {
   level: CefrLevel | null;
   type: WordType | null;
   exampleSentence: string | null;
+  englishDefinition: string | null;
 }
 
 export interface WordInput {
@@ -46,6 +47,7 @@ export interface WordInput {
   level?: CefrLevel | null;
   type?: WordType | null;
   exampleSentence?: string | null;
+  englishDefinition?: string | null;
 }
 
 export interface BulkAddResult {
@@ -55,13 +57,38 @@ export interface BulkAddResult {
 }
 
 // Game
+export type GameMode = 'Translation' | 'Definition';
+
+export interface GameModeOption {
+  mode: GameMode;
+  name: string;
+  description: string;
+  emoji: string;
+}
+
+export const GAME_MODES: GameModeOption[] = [
+  {
+    mode: 'Translation',
+    name: 'Translation Match',
+    description: 'Match each English word with its Vietnamese meaning.',
+    emoji: '🌐',
+  },
+  {
+    mode: 'Definition',
+    name: 'Definition Match',
+    description: 'Match each English word with its English definition.',
+    emoji: '📖',
+  },
+];
+
 export interface GamePairItem {
   id: string;
   english: string;
-  vietnamese: string;
+  match: string;
 }
 
 export interface GamePairs {
+  mode: GameMode;
   pairs: GamePairItem[];
 }
 

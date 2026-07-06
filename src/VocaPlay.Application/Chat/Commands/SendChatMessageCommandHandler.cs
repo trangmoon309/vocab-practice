@@ -70,7 +70,7 @@ public class SendChatMessageCommandHandler
                 return (cleanReply, null);
 
             var inputs = payload.Words.Select(w => new WordInput(
-                w.English, w.Vietnamese, w.Pronunciation, w.Level, w.Type, w.ExampleSentence)).ToList();
+                w.English, w.Vietnamese, w.Pronunciation, w.Level, w.Type, w.ExampleSentence, w.EnglishDefinition)).ToList();
 
             var result = await _bulkAdd.Handle(
                 new BulkAddWordsCommand(command.UserId, inputs), ct);
@@ -84,5 +84,5 @@ public class SendChatMessageCommandHandler
     }
 
     private record BulkActionPayload(string Type, List<WordPayload>? Words);
-    private record WordPayload(string English, string Vietnamese, string? Pronunciation, string? Level, string? Type, string? ExampleSentence);
+    private record WordPayload(string English, string Vietnamese, string? Pronunciation, string? Level, string? Type, string? ExampleSentence, string? EnglishDefinition);
 }

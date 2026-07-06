@@ -8,4 +8,5 @@ public record AddWordCommand(
     string? Pronunciation,
     string? Level,
     string? Type,
-    string? ExampleSentence);
+    string? ExampleSentence,
+    string? EnglishDefinition);

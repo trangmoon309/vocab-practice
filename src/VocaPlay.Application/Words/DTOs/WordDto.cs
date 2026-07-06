@@ -8,4 +8,5 @@ public record WordDto(
     string? Pronunciation,
     string? Level,
     string? Type,
-    string? ExampleSentence);
+    string? ExampleSentence,
+    string? EnglishDefinition);

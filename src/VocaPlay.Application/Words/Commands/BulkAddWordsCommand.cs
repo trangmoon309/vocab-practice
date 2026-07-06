@@ -7,6 +7,7 @@ public record WordInput(
     string? Pronunciation,
     string? Level,
     string? Type,
-    string? ExampleSentence);
+    string? ExampleSentence,
+    string? EnglishDefinition);
 
 public record BulkAddWordsCommand(Guid UserId, IReadOnlyList<WordInput> Words);

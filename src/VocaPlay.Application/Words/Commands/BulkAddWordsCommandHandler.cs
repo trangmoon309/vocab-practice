@@ -44,6 +44,7 @@ public class BulkAddWordsCommandHandler
                 Level = input.Level,
                 Type = input.Type,
                 ExampleSentence = input.ExampleSentence?.Trim(),
+                EnglishDefinition = input.EnglishDefinition?.Trim(),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             });

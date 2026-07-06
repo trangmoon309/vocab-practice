@@ -26,7 +26,7 @@ public class UpdateWordCommandHandlerTests
         _words.Setup(r => r.GetByIdAsync(wordId, default)).ReturnsAsync(word);
 
         var result = await _handler.Handle(new UpdateWordCommand(
-            wordId, userId, "new", "moi", null, "B1", "Verb", null));
+            wordId, userId, "new", "moi", null, "B1", "Verb", null, null));
 
         Assert.Equal("new", result.English);
         Assert.Equal("moi", result.Vietnamese);
@@ -40,7 +40,7 @@ public class UpdateWordCommandHandlerTests
         _words.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), default)).ReturnsAsync((Word?)null);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            _handler.Handle(new UpdateWordCommand(Guid.NewGuid(), Guid.NewGuid(), "x", "y", null, null, null, null)));
+            _handler.Handle(new UpdateWordCommand(Guid.NewGuid(), Guid.NewGuid(), "x", "y", null, null, null, null, null)));
     }
 
     [Fact]
@@ -50,6 +50,6 @@ public class UpdateWordCommandHandlerTests
         _words.Setup(r => r.GetByIdAsync(word.Id, default)).ReturnsAsync(word);
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
-            _handler.Handle(new UpdateWordCommand(word.Id, Guid.NewGuid(), "x", "y", null, null, null, null)));
+            _handler.Handle(new UpdateWordCommand(word.Id, Guid.NewGuid(), "x", "y", null, null, null, null, null)));
     }
 }

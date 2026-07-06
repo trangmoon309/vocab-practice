@@ -18,6 +18,7 @@ public class WordConfiguration : IEntityTypeConfiguration<Word>
         builder.Property(e => e.Level).HasMaxLength(10);
         builder.Property(e => e.Type).HasMaxLength(50);
         builder.Property(e => e.ExampleSentence).HasMaxLength(500);
+        builder.Property(e => e.EnglishDefinition).HasMaxLength(500);
 
         builder.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
         builder.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");

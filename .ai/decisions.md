@@ -175,3 +175,48 @@ Append-only log. Orchestrator writes here after each gate.
 - Human approved Phase 8 as complete with the reduced scope (xUnit only; Testcontainers/Playwright deferred).
 - **Next:** Phase 9 — Reviewer pass. Full review of all production code across all 4 .NET projects and the React app: layer-violation check, hardcoded-secrets check, error-response format check, no `any` types in React, EF migrations complete, OpenAI system prompt matches spec.md.
 - **GATE 9 criteria:** zero BLOCKER findings. Human reviews WARNINGs and decides accept-or-fix.
+
+---
+
+## 2026-06-21 — GATE 9 pending approval: Reviewer pass
+
+**Findings (numbered, severity-tagged):**
+
+1. **[BLOCKER, fixed in this pass]** Zero EF Core migrations existed — schema had only ever been hand-applied to Supabase via raw SQL (deferred since GATE 4/5 due to missing .NET 8 runtime, which is now installed). Generated `InitialCreate` migration via a local `dotnet-ef 8.0.4` tool (added `dotnet-tools.json` manifest since the global tool was v10, incompatible with this net8.0 solution). Migration diffed clean against the live schema — same tables/FKs/indexes. Also added `Microsoft.EntityFrameworkCore.Design` to `VocaPlay.Api.csproj` (required by `dotnet-ef` to resolve the startup project; previously only on `Infrastructure` with `PrivateAssets=all`, which doesn't flow to the tool).
+2. **[BLOCKER, fixed in this pass]** Since Supabase's tables pre-existed outside of any migration history, running `dotnet ef database update` would have failed (or worse, attempted `CREATE TABLE` against existing tables). Resolved by creating `__EFMigrationsHistory` and seeding one row marking `InitialCreate` as applied — a metadata-only write, confirmed via `execute_sql` that no other tables were touched. Future migrations will now apply cleanly via the normal EF tooling.
+3. **[PASS]** Layer dependency rules: `grep` for cross-layer `using` statements confirms Domain has zero references to Application/Infrastructure/Api; Application has zero references to Infrastructure/Api. Clean.
+4. **[PASS]** No hardcoded secrets: tracked `appsettings.json` has empty `Jwt:Secret`/`OpenAI:ApiKey` placeholders; real values live only in gitignored `appsettings.Development.json` (confirmed via `git ls-files`).
+5. **[PASS]** Error response format: `ErrorHandlingMiddleware` maps all exception types to `{ message, statusCode }` (+ `errors[]` for validation), logs full exception server-side only, never serializes stack traces to the client.
+6. **[PASS]** React: zero `any` types anywhere in `vocaplay-web/src`. One hardcoded `http://localhost:8080/api` exists in `axios.ts` but only as a `??` fallback when `VITE_API_BASE_URL` is unset — not used in any deployed config, acceptable as a local-dev convenience.
+7. **[PASS]** API routes verified against `spec.md` §5 letter-for-letter: `/api/auth/*`, `/api/words` (+ `/{id}`, `/bulk`), `/api/game/pairs`, `/api/game/sessions`, `/api/chat` (+ `/history`) — all match post-WordSet-removal contract exactly.
+8. **[PASS]** OpenAI system prompt in `OpenAiChatService.cs` is byte-for-byte identical to `spec.md` §6 (re-verified after the earlier "word set" wording fix in the Phase 7 pass).
+9. **[PASS]** Bulk-add dedup logic (`BulkAddWordsCommandHandler`): case-insensitive, checks against both existing words (`GetEnglishWordsForUserAsync`) and within the same batch (running `HashSet`) — covered by 4 passing unit tests including a same-batch-duplicate case.
+10. **[SUGGESTION, not blocking]** `ChatActionDto`/quiz capability: the `QUIZ_START` action type is defined in types/spec but never actually emitted by the backend (`SendChatMessageCommandHandler` only ever parses `BULK_ADD_WORDS` from the action block) — quiz currently works purely as conversational text, which matches the spec's example prompts but means `action.type === "QUIZ_START"` is dead code on the frontend. Not a bug since nothing breaks; flagging in case future work wants a real quiz-state action.
+
+**Reviewer verdict: APPROVED** — 0 outstanding BLOCKERs (2 found, both fixed in this pass), 1 non-blocking SUGGESTION noted for future consideration.
+
+--- GATE 9: Awaiting your approval. Reviewer verdict APPROVED (2 blockers found and fixed: missing EF migrations + unseeded migration history; both now resolved against the live Supabase DB). One non-blocking suggestion noted (unused QUIZ_START action type). ---
+
+---
+
+## 2026-06-21 — GATE 9 approved: Reviewer pass
+
+- Human approved Phase 9. Zero outstanding blockers; the one SUGGESTION (unused `QUIZ_START` action type) accepted as-is, no fix requested.
+- **Next:** Phase 10 — DevOps / deploy. Per `agent-workflow.md`: verify `Dockerfile` in `VocaPlay.Api/`, verify root `docker-compose.yml`, verify `.github/workflows/backend.yml` + `frontend.yml`, provide Railway env var checklist, Vercel env var checklist, Supabase migration run instructions.
+- **GATE 10 criteria:** human deploys to Railway + Vercel, smoke-tests production URL. Project complete.
+
+---
+
+## 2026-06-21 — Feature: multiple game modes (Translation Match + Definition Match)
+
+- **Scope (human-directed, inserted before Phase 10 deploy):** added a second matching-game mode alongside the existing English↔Vietnamese game. Named per human's request: **"Translation Match"** (existing EN↔VI game) and **"Definition Match"** (new EN word ↔ EN definition game).
+- **Schema:** added `Word.EnglishDefinition` (`string?`, max 500) — optional, user/chatbot-filled. New migration `AddEnglishDefinitionToWords` generated and applied to Supabase (column + `__EFMigrationsHistory` row seeded, consistent with the GATE 9 migration-seeding approach).
+- **Domain:** new `GameMode` enum (`Translation` | `Definition`).
+- **Application:** `GetGamePairsQuery` now takes a `Mode` param; handler filters to `EnglishDefinition`-eligible words for Definition mode (mode-specific 400 message if <4 eligible) and picks the right "match" field per mode. `GamePairItem` generalized from `(Id, English, Vietnamese)` to `(Id, English, Match)` so the frontend renders both modes identically. `WordDto`/`AddWordCommand`/`UpdateWordCommand`/`WordInput`/`BulkAddWordsCommand` all threaded the new field through.
+- **Chat:** system prompt and `SendChatMessageCommandHandler`'s bulk-add JSON payload now also accept/request `englishDefinition`, so the AI chatbot can auto-fill definitions for words it bulk-adds (spec.md §6 updated to match verbatim).
+- **API:** `GET /game/pairs` now takes `?mode=Translation|Definition` (defaults to `Translation`, 400 on invalid value). `WordRequestDto`/`BulkAddWordsRequestDto` extended.
+- **Bug found and fixed during manual verification:** `GameMode` was serializing as an integer (`"mode":1`) instead of a string the frontend expects (`"mode":"Definition"`) — no `JsonStringEnumConverter` was registered in `Program.cs` (other enum-like fields on `Word` are stored as plain `string`, so this gap was never hit before). Fixed by adding `.AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))` to `AddControllers()`.
+- **Frontend:** new `GameSelectPage.tsx` (bento-card picker between the two modes) at `/game`; existing `GamePage.tsx` moved to `/game/play?mode=...`, reads mode from the URL, labels itself dynamically, and shows a friendly "can't start this game yet" error card (with a link to add more words) instead of crashing when a mode has <4 eligible words. `WordsPage`'s word form gained an "English definition (optional)" input, and word cards show it (📖 prefix) when present.
+- **Tests:** updated all existing xUnit call sites for the new positional fields (`AddWordCommand`/`UpdateWordCommand`/`WordInput`/`GetGamePairsQuery`), added 3 new tests for Definition mode (eligible-pairs happy path, exclusion of words without a definition, and the <4-eligible 400 case). **41/41 passing** (up from 38).
+- **Verified live end-to-end:** logged in as `test@example.com`, confirmed `/api/game/pairs?mode=Definition` correctly 400s with fewer than 4 defined words, then succeeds once 4+ exist, returning the corrected string-mode JSON; confirmed `/api/game/pairs?mode=Translation` still works unaffected.
+- `dotnet build` on full solution: 0 errors. `tsc --noEmit`: clean.

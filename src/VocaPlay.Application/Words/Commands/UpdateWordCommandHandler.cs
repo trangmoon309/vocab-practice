@@ -30,10 +30,11 @@ public class UpdateWordCommandHandler
         word.Level = command.Level;
         word.Type = command.Type;
         word.ExampleSentence = command.ExampleSentence?.Trim();
+        word.EnglishDefinition = command.EnglishDefinition?.Trim();
         word.UpdatedAt = DateTime.UtcNow;
 
         await _words.UpdateAsync(word, ct);
-        return new WordDto(word.Id, word.English, word.Vietnamese, word.Pronunciation, word.Level, word.Type, word.ExampleSentence);
+        return new WordDto(word.Id, word.English, word.Vietnamese, word.Pronunciation, word.Level, word.Type, word.ExampleSentence, word.EnglishDefinition);
     }
 
     private static void ValidateEnums(string? level, string? type)

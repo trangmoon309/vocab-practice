@@ -1,13 +1,25 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Navbar } from '../components/layout/Navbar'
 import * as gameApi from '../api/game'
-import type { GamePairItem } from '../types'
+import { GAME_MODES, type GameMode, type GamePairItem } from '../types'
 
-type Card = { id: string; text: string; lang: 'en' | 'vi'; pairId: string }
+type Card = { id: string; text: string; side: 'left' | 'right'; pairId: string }
 type CardState = 'idle' | 'selected' | 'matched' | 'wrong'
 
+function getErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const response = (err as { response?: { data?: { message?: string } } }).response
+    if (response?.data?.message) return response.data.message
+  }
+  return 'Something went wrong loading the game. Please try again.'
+}
+
 export function GamePage() {
+  const [searchParams] = useSearchParams()
+  const mode = (searchParams.get('mode') as GameMode) || 'Translation'
+  const gameInfo = GAME_MODES.find((g) => g.mode === mode) ?? GAME_MODES[0]
+
   const [cards, setCards] = useState<Card[]>([])
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({})
   const [selected, setSelected] = useState<Card | null>(null)
@@ -15,6 +27,7 @@ export function GamePage() {
   const [total, setTotal] = useState(0)
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const buildCards = useCallback((pairs: GamePairItem[]) => {
     const shuffled = [...pairs]
@@ -22,8 +35,8 @@ export function GamePage() {
       .slice(0, 8)
 
     const all: Card[] = [
-      ...shuffled.map((p) => ({ id: `en-${p.id}`, text: p.english, lang: 'en' as const, pairId: p.id })),
-      ...shuffled.map((p) => ({ id: `vi-${p.id}`, text: p.vietnamese, lang: 'vi' as const, pairId: p.id })),
+      ...shuffled.map((p) => ({ id: `l-${p.id}`, text: p.english, side: 'left' as const, pairId: p.id })),
+      ...shuffled.map((p) => ({ id: `r-${p.id}`, text: p.match, side: 'right' as const, pairId: p.id })),
     ].sort(() => Math.random() - 0.5)
 
     setCards(all)
@@ -33,11 +46,18 @@ export function GamePage() {
     setCardStates(states)
   }, [])
 
+  const loadGame = useCallback(() => {
+    setLoading(true)
+    setError(null)
+    gameApi.getGamePairs(mode)
+      .then((r) => buildCards(r.data.pairs))
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setLoading(false))
+  }, [mode, buildCards])
+
   useEffect(() => {
-    gameApi.getGamePairs().then((r) => {
-      buildCards(r.data.pairs)
-    }).finally(() => setLoading(false))
-  }, [buildCards])
+    loadGame()
+  }, [loadGame])
 
   const handleSelect = (card: Card) => {
     if (cardStates[card.id] === 'matched' || cardStates[card.id] === 'selected') return
@@ -50,7 +70,7 @@ export function GamePage() {
 
     if (selected.id === card.id) return
 
-    if (selected.pairId === card.pairId && selected.lang !== card.lang) {
+    if (selected.pairId === card.pairId && selected.side !== card.side) {
       // match
       const newStates = { ...cardStates, [selected.id]: 'matched' as const, [card.id]: 'matched' as const }
       setCardStates(newStates)
@@ -91,30 +111,37 @@ export function GamePage() {
       <Navbar />
       <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
         <div className="mb-4">
-          <Link to="/" className="text-sm font-semibold text-lavender-600 hover:underline">← My Words</Link>
+          <Link to="/game" className="text-sm font-semibold text-lavender-600 hover:underline">← Choose a game</Link>
         </div>
 
-        {done ? (
+        {error ? (
+          <div className="bento-card animate-pop-in p-10 text-center">
+            <p className="text-4xl">🤔</p>
+            <p className="mt-3 font-display text-lg font-bold text-ink-700">Can't start this game yet</p>
+            <p className="mt-1 text-sm text-ink-500">{error}</p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Link to="/" className="btn-coral">Add more words</Link>
+              <Link to="/game" className="btn-ghost">Choose another game</Link>
+            </div>
+          </div>
+        ) : done ? (
           <div className="bento-card animate-pop-in p-10 text-center">
             <p className="text-5xl">🎉</p>
             <p className="mt-3 font-display text-2xl font-bold text-ink-700">All matched!</p>
             <p className="mt-1 text-ink-500">{score} / {total} pairs — nice work!</p>
             <div className="mt-6 flex justify-center gap-3">
-              <button
-                onClick={() => { setDone(false); setScore(0); setLoading(true); gameApi.getGamePairs().then((r) => { buildCards(r.data.pairs); setLoading(false) }) }}
-                className="btn-coral"
-              >
+              <button onClick={() => { setDone(false); setScore(0); loadGame() }} className="btn-coral">
                 Play again
               </button>
-              <Link to="/" className="btn-ghost">
-                Back to words
+              <Link to="/game" className="btn-ghost">
+                Choose another game
               </Link>
             </div>
           </div>
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-ink-700">Match the pairs</h2>
+              <h2 className="font-display text-lg font-bold text-ink-700">{gameInfo.emoji} {gameInfo.name}</h2>
               <span className="rounded-full bg-lavender-100 px-3 py-1 text-sm font-semibold text-lavender-600">
                 {score} / {total} matched
               </span>

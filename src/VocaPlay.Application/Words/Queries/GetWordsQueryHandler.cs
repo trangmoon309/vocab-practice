@@ -14,6 +14,6 @@ public class GetWordsQueryHandler
     public async Task<IReadOnlyList<WordDto>> Handle(GetWordsQuery query, CancellationToken ct = default)
     {
         var words = await _words.GetByUserIdAsync(query.UserId, ct);
-        return words.Select(w => new WordDto(w.Id, w.English, w.Vietnamese, w.Pronunciation, w.Level, w.Type, w.ExampleSentence)).ToList();
+        return words.Select(w => new WordDto(w.Id, w.English, w.Vietnamese, w.Pronunciation, w.Level, w.Type, w.ExampleSentence, w.EnglishDefinition)).ToList();
     }
 }

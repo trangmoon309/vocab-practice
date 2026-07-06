@@ -11,6 +11,7 @@ public class Word
     public string? Level { get; set; }
     public string? Type { get; set; }
     public string? ExampleSentence { get; set; }
+    public string? EnglishDefinition { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 

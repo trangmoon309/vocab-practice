@@ -28,12 +28,13 @@ public class AddWordCommandHandler
             Level = command.Level,
             Type = command.Type,
             ExampleSentence = command.ExampleSentence?.Trim(),
+            EnglishDefinition = command.EnglishDefinition?.Trim(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         await _words.AddAsync(word, ct);
-        return new WordDto(word.Id, word.English, word.Vietnamese, word.Pronunciation, word.Level, word.Type, word.ExampleSentence);
+        return new WordDto(word.Id, word.English, word.Vietnamese, word.Pronunciation, word.Level, word.Type, word.ExampleSentence, word.EnglishDefinition);
     }
 
     private static void ValidateEnums(string? level, string? type)

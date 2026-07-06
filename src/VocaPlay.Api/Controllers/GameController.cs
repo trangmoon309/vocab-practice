@@ -5,6 +5,8 @@ using VocaPlay.Application.Common.Interfaces;
 using VocaPlay.Application.Game.Commands;
 using VocaPlay.Application.Game.DTOs;
 using VocaPlay.Application.Game.Queries;
+using VocaPlay.Domain.Enums;
+using VocaPlay.Domain.Exceptions;
 
 namespace VocaPlay.Api.Controllers;
 
@@ -31,9 +33,13 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("pairs")]
-    public async Task<ActionResult<GamePairsDto>> GetPairs(CancellationToken ct)
+    public async Task<ActionResult<GamePairsDto>> GetPairs([FromQuery] string mode, CancellationToken ct)
     {
-        var result = await _getPairs.Handle(new GetGamePairsQuery(_currentUser.UserId), ct);
+        if (!string.IsNullOrWhiteSpace(mode) && !Enum.TryParse<GameMode>(mode, true, out _))
+            throw new ValidationException($"Invalid mode '{mode}'. Valid values: Translation, Definition.");
+
+        var parsedMode = string.IsNullOrWhiteSpace(mode) ? GameMode.Translation : Enum.Parse<GameMode>(mode, true);
+        var result = await _getPairs.Handle(new GetGamePairsQuery(_currentUser.UserId, parsedMode), ct);
         return Ok(result);
     }
 
