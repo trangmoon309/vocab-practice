@@ -20,9 +20,17 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Database
+        // Database — provider selected by "DatabaseProvider" config key (default: PostgreSQL)
+        var provider = configuration.GetValue<string>("DatabaseProvider") ?? "PostgreSQL";
+        var connectionString = configuration.GetConnectionString("Default");
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("Default")));
+        {
+            if (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+                options.UseSqlServer(connectionString,
+                    sql => sql.MigrationsHistoryTable("__EFMigrationsHistory"));
+            else
+                options.UseNpgsql(connectionString);
+        });
 
         // Settings
         services.Configure<JwtSettings>(configuration.GetSection("Jwt"));

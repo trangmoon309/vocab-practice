@@ -2,12 +2,14 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VocaPlay.Api.Middleware;
 using VocaPlay.Api.Services;
 using VocaPlay.Application;
 using VocaPlay.Application.Common.Interfaces;
 using VocaPlay.Infrastructure;
+using VocaPlay.Infrastructure.Persistence;
 using VocaPlay.Infrastructure.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,6 +65,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Auto-create schema for SQL Server (local dev only)
+if (app.Configuration.GetValue<string>("DatabaseProvider") == "SqlServer")
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated();
+}
 
 if (app.Environment.IsDevelopment())
 {

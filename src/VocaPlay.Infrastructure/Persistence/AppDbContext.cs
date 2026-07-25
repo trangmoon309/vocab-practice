@@ -21,6 +21,15 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new GameSessionConfiguration());
         modelBuilder.ApplyConfiguration(new ChatMessageConfiguration());
 
+        // Replace PostgreSQL NOW() with SQL Server GETUTCDATE() when using SQL Server provider
+        if (Database.IsSqlServer())
+        {
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+                foreach (var prop in entity.GetProperties())
+                    if (prop.GetDefaultValueSql() == "NOW()")
+                        prop.SetDefaultValueSql("GETUTCDATE()");
+        }
+
         base.OnModelCreating(modelBuilder);
     }
 }
